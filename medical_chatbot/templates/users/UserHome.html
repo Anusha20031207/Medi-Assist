@@ -1,0 +1,124 @@
+{% extends 'users/Userbase.html' %}
+{% block content %}
+<style>
+    .user-home-box {
+        max-width: 900px;
+        margin: 2rem auto;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 1.5rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        animation: fadeIn 0.8s ease-in-out;
+        color: #1e293b;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .user-home-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .user-home-box h2 {
+        color: #1e293b;
+        font-size: 2rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .user-home-box p {
+        font-size: 1.1rem;
+        color: #4b5563;
+        margin-bottom: 1.5rem;
+    }
+
+    .quick-links {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .quick-link-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1.5rem;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        text-decoration: none;
+        color: #1e293b;
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+
+    .quick-link-btn:hover {
+        background: #f0f4f8;
+        border-color: #667eea;
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+    }
+
+    .quick-link-btn i {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: #667eea;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .user-home-box {
+            margin: 1rem;
+            padding: 1rem;
+        }
+
+        .user-home-box h2 {
+            font-size: 1.6rem;
+        }
+
+        .user-home-box p {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<div class="user-home-box">
+    <h2><i class="fas fa-user"></i> Welcome {{ request.session.loggeduser }}</h2>
+    <p>Explore AI-powered medical and nutrition insights for personalized health solutions.</p>
+    
+    <!-- Quick Links -->
+    <div class="quick-links">
+        <a href="{% url 'insights_dashboard' %}" class="quick-link-btn">
+            <i class="fas fa-chart-line"></i>
+            Health Insights
+        </a>
+        <a href="{% url 'medical_chatbot' %}" class="quick-link-btn">
+            <i class="fas fa-stethoscope"></i>
+            Medical Chatbot
+        </a>
+        <a href="{% url 'nutrition_bot' %}" class="quick-link-btn">
+            <i class="fas fa-apple-alt"></i>
+            Nutrition Bot
+        </a>
+        <a href="{% url 'feedback' %}" class="quick-link-btn">
+            <i class="fas fa-comments"></i>
+            Feedback
+        </a>
+    </div>
+</div>
+{% endblock %}

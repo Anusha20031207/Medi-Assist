@@ -1,0 +1,73 @@
+{% extends 'users/Userbase.html' %}
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Cloud Anomaly Detection</h5>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label">API Calls per Minute *</label>
+              <input name="api_calls" type="number" step="1" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Error Rate (%) *</label>
+              <input name="error_rate" type="number" step="0.01" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">CPU Usage (%) *</label>
+              <input name="cpu_usage" type="number" step="0.1" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Packet Size (bytes) *</label>
+              <input name="packet_size" type="number" step="1" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Flow Duration (sec) *</label>
+              <input name="flow_duration" type="number" step="0.01" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Login Frequency (per day) *</label>
+              <input name="login_frequency" type="number" step="1" class="form-control" required>
+            </div>
+            <div class="col-12">
+              <label class="form-label">Access Pattern Notes (optional)</label>
+              <textarea name="access_pattern" rows="3" class="form-control" placeholder="e.g., unusual admin console access at odd hours"></textarea>
+            </div>
+          </div>
+          <div class="mt-3">
+            <button class="btn btn-primary" type="submit">Analyze</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h5 class="card-title">Result</h5>
+        {% if anomaly_status or threat_category or confidence_score or explanation %}
+          <ul class="list-group">
+            <li class="list-group-item"><strong>Anomaly Status:</strong> {{ anomaly_status }}</li>
+            <li class="list-group-item"><strong>Threat Category:</strong> {{ threat_category }}</li>
+            <li class="list-group-item"><strong>Confidence:</strong> {{ confidence_score }}</li>
+          </ul>
+          <div class="mt-3">
+            <h6>Reasoning</h6>
+            <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ explanation }}</pre>
+          </div>
+          <details class="mt-3">
+            <summary class="text-muted">Raw Model Response</summary>
+            <pre class="bg-light p-3 border rounded" style="white-space: pre-wrap;">{{ raw_response }}</pre>
+          </details>
+        {% else %}
+          <p class="text-muted">Submit the form to see the detection result.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

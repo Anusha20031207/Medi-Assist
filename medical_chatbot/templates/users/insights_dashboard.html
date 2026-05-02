@@ -1,0 +1,467 @@
+{% extends 'users/Userbase.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .insights-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .insights-header {
+        background: linear-gradient(to right, #667eea, #764ba2);
+        color: white;
+        padding: 3rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .insights-header h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2.5rem;
+        font-weight: bold;
+    }
+
+    .insights-header p {
+        margin: 0;
+        opacity: 0.95;
+        font-size: 1.1rem;
+    }
+
+    .health-score-card {
+        background: white;
+        border-radius: 15px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }
+
+    .health-score-circle {
+        width: 180px;
+        height: 180px;
+        border-radius: 50%;
+        margin: 0 auto 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .health-score-value {
+        font-size: 2rem;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+    }
+
+    .health-status-badge {
+        display: inline-block;
+        padding: 0.75rem 1.5rem;
+        border-radius: 25px;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: white;
+    }
+
+    .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .metric-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .metric-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+
+    .metric-icon {
+        font-size: 2.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .metric-title {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .metric-subtitle {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 0.5rem;
+    }
+
+    .activity-streak {
+        background: linear-gradient(to right, #f093fb, #f5576c);
+        color: white;
+    }
+
+    .health-queries {
+        background: linear-gradient(to right, #4facfe, #00f2fe);
+        color: white;
+    }
+
+    .nutrition-score {
+        background: linear-gradient(to right, #43e97b, #38f9d7);
+        color: white;
+    }
+
+    .nutrition-analyses {
+        background: linear-gradient(to right, #fa709a, #fee140);
+        color: white;
+    }
+
+    .section-title {
+        font-size: 1.8rem;
+        font-weight: bold;
+        margin: 2rem 0 1rem 0;
+        color: #333;
+        padding-bottom: 0.5rem;
+        border-bottom: 3px solid #667eea;
+    }
+
+    .health-concerns-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .concern-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+        border-left: 4px solid #667eea;
+    }
+
+    .concern-name {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .concern-count {
+        background: #667eea;
+        color: white;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+    }
+
+    .no-concerns {
+        text-align: center;
+        color: #999;
+        padding: 2rem;
+    }
+
+    .recent-activity {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .activity-card {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .activity-card h4 {
+        margin-top: 0;
+        color: #333;
+        font-size: 1.1rem;
+    }
+
+    .activity-item {
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #e5e7eb;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    .activity-query {
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 0.3rem;
+    }
+
+    .activity-time {
+        font-size: 0.8rem;
+        color: #999;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .recommendations-container {
+        background: white;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .recommendation-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 4px solid #f59e0b;
+        background: #fffbeb;
+        border-radius: 6px;
+    }
+
+    .recommendation-item.high {
+        border-left-color: #ef4444;
+        background: #fef2f2;
+    }
+
+    .recommendation-item.medium {
+        border-left-color: #f59e0b;
+        background: #fffbeb;
+    }
+
+    .recommendation-item.low {
+        border-left-color: #10b981;
+        background: #f0fdf4;
+    }
+
+    .recommendation-title {
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+    }
+
+    .recommendation-desc {
+        font-size: 0.9rem;
+        color: #666;
+        margin-bottom: 0.3rem;
+    }
+
+    .recommendation-meta {
+        font-size: 0.8rem;
+        color: #999;
+    }
+
+    @media (max-width: 768px) {
+        .insights-header {
+            padding: 1.5rem;
+        }
+
+        .insights-header h1 {
+            font-size: 1.8rem;
+        }
+
+        .health-score-circle {
+            width: 120px;
+            height: 120px;
+            font-size: 2rem;
+        }
+
+        .metrics-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .recent-activity {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="insights-container">
+    <!-- Header -->
+    <div class="insights-header">
+        <h1><i class="fas fa-chart-line"></i> Your Health Insights</h1>
+        <p>Real-time analytics of your health journey and progress</p>
+    </div>
+
+    <!-- Overall Health Score -->
+    <div class="health-score-card">
+        <div class="health-score-circle" style="background: {{ status_color }};">
+            {{ health_score }}
+        </div>
+        <div class="health-score-value">Overall Health Score</div>
+        <div class="health-status-badge" style="background: {{ status_color }};">
+            {{ health_status }}
+        </div>
+        <p style="color: #999; margin: 0;">Based on your medical queries, nutrition analysis, and health concerns</p>
+    </div>
+
+    <!-- Key Metrics -->
+    <div class="metrics-grid">
+        <div class="metric-card activity-streak">
+            <div class="metric-icon"><i class="fas fa-fire"></i></div>
+            <div class="metric-title">Activity Streak</div>
+            <div class="metric-value">{{ activity_streak }}</div>
+            <div class="metric-subtitle">Days of active engagement</div>
+        </div>
+
+        <div class="metric-card health-queries">
+            <div class="metric-icon"><i class="fas fa-stethoscope"></i></div>
+            <div class="metric-title">Health Queries</div>
+            <div class="metric-value">{{ total_queries }}</div>
+            <div class="metric-subtitle">Questions asked to AI doctor</div>
+        </div>
+
+        <div class="metric-card nutrition-score">
+            <div class="metric-icon"><i class="fas fa-apple-alt"></i></div>
+            <div class="metric-title">Nutrition Score</div>
+            <div class="metric-value">{{ avg_nutrition_score }}%</div>
+            <div class="metric-subtitle">Average food health rating</div>
+        </div>
+
+        <div class="metric-card nutrition-analyses">
+            <div class="metric-icon"><i class="fas fa-camera"></i></div>
+            <div class="metric-title">Food Analyses</div>
+            <div class="metric-value">{{ total_analyses }}</div>
+            <div class="metric-subtitle">Nutrition scans performed</div>
+        </div>
+    </div>
+
+    <!-- Health Concerns Analysis -->
+    <h2 class="section-title"><i class="fas fa-exclamation-circle"></i> Health Concerns Detected</h2>
+    <div class="health-concerns-container">
+        {% if health_concerns %}
+            {% for concern, count in health_concerns.items %}
+            <div class="concern-item">
+                <span class="concern-name">
+                    {% if concern == 'diabetes' %}<i class="fas fa-tint"></i>{% endif %}
+                    {% if concern == 'heart' %}<i class="fas fa-heart"></i>{% endif %}
+                    {% if concern == 'weight' %}<i class="fas fa-weight"></i>{% endif %}
+                    {% if concern == 'sleep' %}<i class="fas fa-bed"></i>{% endif %}
+                    {% if concern == 'stress' %}<i class="fas fa-brain"></i>{% endif %}
+                    {% if concern == 'digestion' %}<i class="fas fa-utensils"></i>{% endif %}
+                    {% if concern == 'allergy' %}<i class="fas fa-allergies"></i>{% endif %}
+                    {{ concern|title }}
+                </span>
+                <span class="concern-count">{{ count }} queries</span>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-concerns">
+                <p><i class="fas fa-smile" style="font-size: 2rem; margin-bottom: 1rem;"></i></p>
+                <p>No specific health concerns detected yet. Keep using the chatbot to get personalized insights!</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Activity -->
+    <h2 class="section-title"><i class="fas fa-history"></i> Recent Activity</h2>
+    <div class="recent-activity">
+        <!-- Recent Chats -->
+        <div class="activity-card">
+            <h4><i class="fas fa-comments"></i> Recent Medical Queries</h4>
+            {% if recent_chats %}
+                {% for chat in recent_chats %}
+                <div class="activity-item">
+                    <div class="activity-query">{{ chat.query|truncatewords:10 }}</div>
+                    <div class="activity-time">{{ chat.created_at|date:"M d, Y" }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>No medical queries yet</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Recent Nutrition -->
+        <div class="activity-card">
+            <h4><i class="fas fa-leaf"></i> Recent Nutrition Analyses</h4>
+            {% if recent_analyses %}
+                {% for analysis in recent_analyses %}
+                <div class="activity-item">
+                    <div class="activity-query">Health Score: {{ analysis.health_percentage }}%</div>
+                    <div class="activity-time">{{ analysis.created_at|date:"M d, Y" }}</div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <p>No nutrition analyses yet</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Personalized Recommendations -->
+    {% if recommendations %}
+    <h2 class="section-title"><i class="fas fa-lightbulb"></i> Personalized Recommendations</h2>
+    <div class="recommendations-container">
+        {% for rec in recommendations %}
+        <div class="recommendation-item {{ rec.priority }}">
+            <div class="recommendation-title">
+                {% if rec.recommendation_type == 'medical' %}<i class="fas fa-stethoscope"></i>{% endif %}
+                {% if rec.recommendation_type == 'nutrition' %}<i class="fas fa-apple-alt"></i>{% endif %}
+                {% if rec.recommendation_type == 'lifestyle' %}<i class="fas fa-spa"></i>{% endif %}
+                {% if rec.recommendation_type == 'exercise' %}<i class="fas fa-dumbbell"></i>{% endif %}
+                {{ rec.title }}
+            </div>
+            <div class="recommendation-desc">{{ rec.description }}</div>
+            <div class="recommendation-meta">
+                <strong>Type:</strong> {{ rec.recommendation_type|title }} | 
+                <strong>Priority:</strong> <span style="color: 
+                    {% if rec.priority == 'high' %}#ef4444
+                    {% elif rec.priority == 'medium' %}#f59e0b
+                    {% else %}#10b981{% endif %};">{{ rec.priority|upper }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Action Buttons -->
+    <div style="margin: 3rem 0; text-align: center;">
+        <a href="{% url 'medical_chatbot' %}" class="btn" style="display: inline-block; padding: 1rem 2rem; background: linear-gradient(to right, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; margin-right: 1rem; transition: all 0.3s ease;" 
+           onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <i class="fas fa-comments"></i> Ask Health Question
+        </a>
+        <a href="{% url 'nutrition_bot' %}" class="btn" style="display: inline-block; padding: 1rem 2rem; background: linear-gradient(to right, #43e97b, #38f9d7); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; transition: all 0.3s ease;"
+           onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 6px 20px rgba(0,0,0,0.2)';"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+            <i class="fas fa-camera"></i> Analyze Food
+        </a>
+    </div>
+</div>
+
+{% endblock %}

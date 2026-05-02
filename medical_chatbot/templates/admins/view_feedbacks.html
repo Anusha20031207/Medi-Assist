@@ -1,0 +1,338 @@
+{% extends 'admins/Adminbase.html' %}
+{% block content %}
+<style>
+    .feedback-admin-container {
+        max-width: 1200px;
+        margin: 2rem auto;
+        padding: 0;
+    }
+
+    .title-section {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .title-section h2 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #1e293b;
+        border-bottom: 3px solid #3f8efc;
+        display: inline-block;
+        padding-bottom: 10px;
+        animation: fadeIn 1s ease-in-out;
+    }
+
+    .feedback-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .feedback-card {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border-left: 5px solid #3f8efc;
+        animation: slideUp 0.6s ease-in-out;
+    }
+
+    .feedback-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .feedback-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 1rem;
+    }
+
+    .feedback-card-title {
+        flex: 1;
+    }
+
+    .feedback-card-subject {
+        font-size: 1.2rem;
+        font-weight: bold;
+        color: #1e293b;
+        margin: 0 0 0.5rem 0;
+        word-wrap: break-word;
+    }
+
+    .feedback-card-user {
+        font-size: 0.9rem;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .feedback-card-meta {
+        display: flex;
+        gap: 0.8rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .feedback-rating {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.9rem;
+        white-space: nowrap;
+    }
+
+    .feedback-status {
+        padding: 0.4rem 0.9rem;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 0.85rem;
+        background: #dcfce7;
+        color: #166534;
+    }
+
+    .feedback-message {
+        color: #4b5563;
+        line-height: 1.7;
+        margin: 1rem 0;
+        max-height: 150px;
+        overflow-y: auto;
+    }
+
+    .feedback-date {
+        font-size: 0.85rem;
+        color: #94a3b8;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .delete-feedback-btn {
+        background: #ef4444;
+        color: white;
+        border: none;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+    }
+
+    .delete-feedback-btn:hover {
+        background: #dc2626;
+        transform: scale(1.05);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    }
+
+    .delete-feedback-btn:active {
+        transform: scale(0.95);
+    }
+
+    .stats-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .stat-box {
+        background: linear-gradient(135deg, #1b4965 0%, #3f8efc 100%);
+        color: #f8fafc;
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: bold;
+        margin: 0;
+    }
+
+    .stat-label {
+        font-size: 0.95rem;
+        margin-top: 0.5rem;
+        opacity: 0.9;
+    }
+
+    .no-feedbacks {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .no-feedbacks-icon {
+        font-size: 3rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .no-feedbacks-text {
+        color: #64748b;
+        font-size: 1.1rem;
+        margin: 0;
+    }
+
+    .filter-section {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-label {
+        font-weight: 600;
+        color: #1e293b;
+        margin-right: 1rem;
+    }
+
+    .filter-select {
+        padding: 0.6rem 1rem;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+        color: #1e293b;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .filter-select:hover {
+        border-color: #3f8efc;
+    }
+
+    @keyframes slideUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        .feedback-grid {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .title-section h2 {
+            font-size: 1.6rem;
+        }
+
+        .stats-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
+        .feedback-card-header {
+            flex-direction: column;
+        }
+
+        .feedback-card-meta {
+            width: 100%;
+            justify-content: flex-start;
+        }
+    }
+</style>
+
+<div class="feedback-admin-container">
+    <div class="title-section">
+        <h2><i class="fas fa-comments"></i> User Feedback Management</h2>
+    </div>
+
+    {% if feedbacks %}
+    <div class="stats-container">
+        <div class="stat-box">
+            <p class="stat-number">{{ feedbacks.count }}</p>
+            <p class="stat-label">Total Feedbacks</p>
+        </div>
+        <div class="stat-box">
+            <p class="stat-number">⭐ {{ avg_rating|default:"N/A" }}</p>
+            <p class="stat-label">Average Rating</p>
+        </div>
+        <div class="stat-box">
+            <p class="stat-number">{{ unique_users }}</p>
+            <p class="stat-label">Users Reviewed</p>
+        </div>
+    </div>
+
+    <div class="feedback-grid">
+        {% for feedback in feedbacks %}
+        <div class="feedback-card">
+            <div class="feedback-card-header">
+                <div class="feedback-card-title">
+                    <h4 class="feedback-card-subject">{{ feedback.subject }}</h4>
+                    <p class="feedback-card-user"><i class="fas fa-user"></i> {{ feedback.user.name }}</p>
+                </div>
+                <form method="POST" action="{% url 'delete_feedback' feedback.id %}" style="margin: 0; display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="delete-feedback-btn" onclick="return confirm('Are you sure you want to delete this feedback?');">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="feedback-card-meta">
+                <span class="feedback-rating">⭐ {{ feedback.rating }}/5</span>
+                <span class="feedback-status">{{ feedback.get_status_display }}</span>
+            </div>
+
+            <p class="feedback-message">{{ feedback.message }}</p>
+
+            <div class="feedback-date">
+                <i class="fas fa-calendar"></i> {{ feedback.created_at|date:"M d, Y H:i" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="no-feedbacks">
+        <div class="no-feedbacks-icon">
+            <i class="fas fa-inbox"></i>
+        </div>
+        <p class="no-feedbacks-text">No feedbacks received yet. Users will submit their feedback here.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    // Calculate and display statistics
+    document.addEventListener('DOMContentLoaded', function() {
+        const feedbacks = document.querySelectorAll('.feedback-card');
+        if (feedbacks.length > 0) {
+            // Calculate average rating
+            let totalRating = 0;
+            feedbacks.forEach(card => {
+                const ratingText = card.querySelector('.feedback-rating').textContent;
+                const rating = parseInt(ratingText.match(/\d+/)[0]);
+                totalRating += rating;
+            });
+            const avgRating = (totalRating / feedbacks.length).toFixed(1);
+            
+            // Count unique users
+            const users = new Set();
+            feedbacks.forEach(card => {
+                const userName = card.querySelector('.feedback-card-user').textContent;
+                users.add(userName);
+            });
+        }
+    });
+</script>
+{% endblock %}

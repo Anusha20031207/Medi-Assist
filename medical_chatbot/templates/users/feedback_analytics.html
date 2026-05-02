@@ -1,0 +1,504 @@
+{% extends 'users/Userbase.html' %}
+{% load static %}
+
+{% block title %}Feedback Analytics Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1 class="mb-3">📊 Feedback Analytics Dashboard</h1>
+            <p class="text-muted">Comprehensive analysis of user feedback data</p>
+        </div>
+    </div>
+
+    <!-- Period Selector -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-body">
+                    <label for="periodSelect" class="form-label">Select Analysis Period:</label>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-primary" data-period="7">Last 7 Days</button>
+                        <button type="button" class="btn btn-outline-primary active" data-period="30">Last 30 Days</button>
+                        <button type="button" class="btn btn-outline-primary" data-period="90">Last 90 Days</button>
+                        <button type="button" class="btn btn-outline-primary" data-period="365">Last Year</button>
+                    </div>
+                    <button type="button" class="btn btn-success ms-3" id="exportBtn">
+                        <i class="fas fa-download"></i> Export as JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Key Insights -->
+    {% if insights %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">💡 Key Insights</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <p><strong>Overall Satisfaction:</strong> 
+                                <span class="badge bg-{% if insights.overall_satisfaction == 'High' %}success{% elif insights.overall_satisfaction == 'Medium' %}warning{% else %}danger{% endif %}">
+                                    {{ insights.overall_satisfaction }}
+                                </span>
+                            </p>
+                            <p><strong>Sentiment Trend:</strong> 
+                                <span class="badge bg-{% if insights.sentiment_trend == 'Positive' %}success{% elif insights.sentiment_trend == 'Mixed' %}warning{% else %}danger{% endif %}">
+                                    {{ insights.sentiment_trend }}
+                                </span>
+                            </p>
+                            <p><strong>Top Issue:</strong> {{ insights.top_issue_category }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <p><strong>User Participation:</strong> {{ insights.user_participation }}</p>
+                            <p><strong>Top Themes:</strong> 
+                                {% for theme in insights.key_feedback_themes %}
+                                    <span class="badge bg-secondary">{{ theme }}</span>
+                                {% endfor %}
+                            </p>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Recommendations:</h6>
+                    <ul class="list-unstyled">
+                        {% for rec in insights.recommendations %}
+                            <li class="mb-2">{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Basic Statistics -->
+    {% if analytics_30d.basic_statistics %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Total Feedbacks</h6>
+                    <h3 class="text-primary">{{ analytics_30d.basic_statistics.total_feedbacks }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Average Rating</h6>
+                    <h3 class="text-success">{{ analytics_30d.basic_statistics.average_rating }}/5</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Unique Users</h6>
+                    <h3 class="text-info">{{ analytics_30d.basic_statistics.unique_users }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body text-center">
+                    <h6 class="text-muted">Analysis Period</h6>
+                    <h3 class="text-warning">{{ analytics_30d.basic_statistics.period_days }} Days</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Rating Distribution -->
+    {% if analytics_30d.basic_statistics.rating_distribution %}
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">⭐ Rating Distribution</h5>
+                </div>
+                <div class="card-body">
+                    {% for rating, data in analytics_30d.basic_statistics.rating_distribution.items %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <label>{{ rating }} - {% if rating == '1' %}Poor{% elif rating == '2' %}Fair{% elif rating == '3' %}Good{% elif rating == '4' %}Very Good{% else %}Excellent{% endif %}</label>
+                            <span>{{ data.count }} ({{ data.percentage }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-{% if rating >= 4 %}success{% elif rating >= 3 %}warning{% else %}danger{% endif %}" 
+                                 role="progressbar" 
+                                 style="width: {{ data.percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Rating Statistics -->
+        {% if analytics_30d.rating_analysis %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">📈 Rating Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <td><strong>Average:</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.average_rating }}/5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Median:</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.median_rating }}/5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Mode (Most Common):</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.rating_mode }}/5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Std Deviation:</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.std_deviation }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Min Rating:</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.min_rating }}/5</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Max Rating:</strong></td>
+                            <td class="text-end">{{ analytics_30d.rating_analysis.max_rating }}/5</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Sentiment Analysis -->
+    {% if analytics_30d.sentiment_analysis and analytics_30d.sentiment_analysis.error == None %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">😊 Sentiment Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <h6>Positive Feedback</h6>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <div class="progress-pie" style="width: 120px; height: 120px; margin: 0 auto;">
+                                    <div style="font-size: 36px; color: #28a745;">😊</div>
+                                    <h3 class="text-success">{{ analytics_30d.sentiment_analysis.positive_pct|default:0 }}%</h3>
+                                </div>
+                            </div>
+                            <p class="text-muted">{{ analytics_30d.sentiment_analysis.positive }} feedbacks</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Neutral Feedback</h6>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <div class="progress-pie" style="width: 120px; height: 120px; margin: 0 auto;">
+                                    <div style="font-size: 36px;">😐</div>
+                                    <h3 class="text-warning">{{ analytics_30d.sentiment_analysis.neutral_pct|default:0 }}%</h3>
+                                </div>
+                            </div>
+                            <p class="text-muted">{{ analytics_30d.sentiment_analysis.neutral }} feedbacks</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <h6>Negative Feedback</h6>
+                            <div class="d-flex justify-content-center align-items-center">
+                                <div class="progress-pie" style="width: 120px; height: 120px; margin: 0 auto;">
+                                    <div style="font-size: 36px;">😞</div>
+                                    <h3 class="text-danger">{{ analytics_30d.sentiment_analysis.negative_pct|default:0 }}%</h3>
+                                </div>
+                            </div>
+                            <p class="text-muted">{{ analytics_30d.sentiment_analysis.negative }} feedbacks</p>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Average Polarity Score:</strong> {{ analytics_30d.sentiment_analysis.avg_polarity|default:"N/A" }} 
+                                <span class="text-muted">(Range: -1 to 1, where 1 is most positive)</span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Average Subjectivity Score:</strong> {{ analytics_30d.sentiment_analysis.avg_subjectivity|default:"N/A" }}
+                                <span class="text-muted">(Range: 0 to 1, where 1 is most subjective)</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Word Frequency & Feedback Categories -->
+    <div class="row mb-4">
+        <!-- Word Frequency -->
+        {% if analytics_30d.word_frequency %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">🔤 Top Keywords</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Total Unique Words: <strong>{{ analytics_30d.word_frequency.total_unique_words }}</strong> | 
+                        Total Words: <strong>{{ analytics_30d.word_frequency.total_words }}</strong>
+                    </p>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Word</th>
+                                <th>Frequency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for word_data in analytics_30d.word_frequency.top_words %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td><span class="badge bg-primary">{{ word_data.word }}</span></td>
+                                <td><strong>{{ word_data.frequency }}</strong></td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Feedback Categories -->
+        {% if analytics_30d.feedback_categories %}
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">📂 Feedback Categories</h5>
+                </div>
+                <div class="card-body">
+                    {% for category, data in analytics_30d.feedback_categories.items %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <label>{{ category }}</label>
+                            <span>{{ data.count }} ({{ data.percentage }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar" 
+                                 role="progressbar" 
+                                 style="width: {{ data.percentage }}%">
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- User Engagement -->
+    {% if analytics_30d.user_engagement %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">👥 User Engagement Analysis</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Total Unique Users</h6>
+                            <h3 class="text-primary">{{ analytics_30d.user_engagement.total_unique_users }}</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Power Users (3+ feedbacks)</h6>
+                            <h3 class="text-success">{{ analytics_30d.user_engagement.power_users }}</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Avg Feedbacks/User</h6>
+                            <h3 class="text-info">{{ analytics_30d.user_engagement.avg_feedbacks_per_user }}</h3>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 class="text-muted">Power User %</h6>
+                            <h3 class="text-warning">
+                                {% if analytics_30d.user_engagement.total_unique_users > 0 %}
+                                    {{ analytics_30d.user_engagement.power_users|add:0|mul:100|div:analytics_30d.user_engagement.total_unique_users|floatformat:1 }}%
+                                {% else %}
+                                    0%
+                                {% endif %}
+                            </h3>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Top Contributors:</h6>
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>User</th>
+                                <th>Feedbacks</th>
+                                <th>Avg Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in analytics_30d.user_engagement.top_contributors %}
+                            <tr>
+                                <td>{{ forloop.counter }}</td>
+                                <td>{{ user.user_name }}</td>
+                                <td>{{ user.feedback_count }}</td>
+                                <td>
+                                    <span class="badge bg-{% if user.avg_rating >= 4 %}success{% elif user.avg_rating >= 3 %}warning{% else %}danger{% endif %}">
+                                        {{ user.avg_rating }}/5
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Daily Trends -->
+    {% if analytics_30d.daily_trends %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">📅 Daily Trends</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Feedback Count</th>
+                                    <th>Avg Rating</th>
+                                    <th>Min Rating</th>
+                                    <th>Max Rating</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for date, trend in analytics_30d.daily_trends.daily_trends.items %}
+                                <tr>
+                                    <td><strong>{{ date }}</strong></td>
+                                    <td>{{ trend.count }}</td>
+                                    <td>
+                                        <span class="badge bg-{% if trend.avg_rating >= 4 %}success{% elif trend.avg_rating >= 3 %}warning{% else %}danger{% endif %}">
+                                            {{ trend.avg_rating }}/5
+                                        </span>
+                                    </td>
+                                    <td>{{ trend.min_rating }}/5</td>
+                                    <td>{{ trend.max_rating }}/5</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Feedback Clustering -->
+    {% if analytics_30d.feedback_clustering and analytics_30d.feedback_clustering.error == None %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">🔗 Feedback Clustering (K-Means)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for cluster_name, cluster_data in analytics_30d.feedback_clustering.items %}
+                        <div class="col-md-4 mb-3">
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6 class="text-primary">{{ cluster_name|title }}</h6>
+                                    <p class="mb-2">
+                                        <strong>Size:</strong> {{ cluster_data.size }} feedbacks<br>
+                                        <strong>Avg Rating:</strong> <span class="badge bg-success">{{ cluster_data.avg_rating }}/5</span>
+                                    </p>
+                                    <hr>
+                                    <p class="small text-muted"><strong>Sample Feedbacks:</strong></p>
+                                    {% for feedback in cluster_data.sample_feedbacks %}
+                                    <div class="small mb-2 p-2 bg-light rounded">
+                                        <strong>{{ feedback.subject }}</strong><br>
+                                        Rating: {{ feedback.rating }}/5
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+<style>
+    .progress {
+        height: 25px;
+    }
+    .progress-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: white;
+    }
+    .card {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .btn-group .btn.active {
+        background-color: #007bff;
+        color: white;
+    }
+</style>
+
+<script>
+// Period selector
+document.querySelectorAll('.btn-group .btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        document.querySelectorAll('.btn-group .btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        const period = this.getAttribute('data-period');
+        loadAnalytics(period);
+    });
+});
+
+// Export button
+document.getElementById('exportBtn').addEventListener('click', function() {
+    const period = document.querySelector('.btn-group .btn.active').getAttribute('data-period');
+    window.location.href = `{% url 'export_analytics' %}?period=${period}`;
+});
+
+function loadAnalytics(period) {
+    // Implementation for dynamic loading via AJAX
+    console.log('Loading analytics for period:', period);
+}
+</script>
+
+{% endblock %}

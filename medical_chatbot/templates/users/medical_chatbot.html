@@ -1,0 +1,886 @@
+{% extends 'users/Userbase.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .chatbot-container {
+        max-width: 1200px;
+        margin: 2.5rem auto;
+        padding: 2.5rem;
+        backdrop-filter: blur(8px);
+        border-radius: 15px;
+        animation: fadeIn 0.8s ease-in-out;
+        transition: transform 0.3s ease;
+    }
+
+    .chatbot-container:hover {
+        transform: translateY(-5px);
+    }
+
+    .chatbot-header {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+    }
+
+    .chatbot-header h3 {
+        color: #f8fafc;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+    }
+
+    .chatbot-body {
+        padding: 2rem;
+    }
+
+    .chatbot-form {
+        margin-bottom: 2.5rem;
+    }
+
+    .chatbot-form label {
+        display: block;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #00cc99; /* Changed to a vibrant teal for contrast */
+        margin-bottom: 0.7rem;
+    }
+
+    .chatbot-form textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 1.2rem;
+        border: none;
+        border-radius: 12px;
+        background: rgba(229, 231, 235, 0.8);
+        font-size: 1.1rem;
+        color: #333333; /* Changed to a darker gray for readability */
+        resize: vertical;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chatbot-form textarea::placeholder {
+        color: #666666; /* Changed placeholder to a medium gray for visibility */
+    }
+
+    .chatbot-form textarea:focus {
+        outline: none;
+        border: 2px solid #3f8efc;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .chatbot-form button {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        font-weight: bold;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        margin-right: 0.5rem;
+    }
+
+    .chatbot-form button:hover {
+        background: linear-gradient(to right, #16394e, #2b6cbf);
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .microphone-btn {
+        display: inline-block;
+        padding: 1rem 2rem;
+        background: linear-gradient(to right, #f59e0b, #d97706);
+        color: #f8fafc;
+        font-weight: bold;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        vertical-align: bottom;
+    }
+
+    /* Compact history buttons matching Ask/Speak UI */
+    .history-reuse-btn, .history-delete-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 1.2rem;
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        font-weight: 700;
+        font-size: 0.95rem;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+        white-space: nowrap;
+    }
+
+    .history-delete-btn {
+        background: linear-gradient(to right, #b45309, #ef4444);
+    }
+
+    .history-reuse-btn i, .history-delete-btn i {
+        width: 1.1rem;
+        text-align: center;
+    }
+
+    .history-reuse-btn:hover, .history-delete-btn:hover {
+        transform: translateY(-2px) scale(1.03);
+        box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+
+    .microphone-btn:hover {
+        background: linear-gradient(to right, #d97706, #b45309);
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .microphone-btn.listening {
+        background: linear-gradient(to right, #ef4444, #dc2626);
+        animation: pulse 0.6s infinite;
+    }
+
+    .language-selector {
+        margin-bottom: 1rem;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .language-selector label {
+        font-weight: 600;
+        color: #00cc99;
+    }
+
+    .language-selector select {
+        padding: 0.6rem 1rem;
+        border: 2px solid #3f8efc;
+        border-radius: 8px;
+        background: white;
+        color: #333;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .language-selector select:hover {
+        border-color: #00cc99;
+        box-shadow: 0 2px 8px rgba(0, 204, 153, 0.2);
+    }
+
+    .language-selector select:focus {
+        outline: none;
+        border-color: #00cc99;
+        box-shadow: 0 0 10px rgba(0, 204, 153, 0.3);
+    }
+
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+    }
+
+    .mic-status {
+        display: none;
+        margin-top: 0.5rem;
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        font-weight: 600;
+    }
+
+    .mic-status.listening {
+        display: block;
+        background: #fef3c7;
+        color: #92400e;
+        border: 1px solid #fcd34d;
+    }
+
+    .mic-status.success {
+        display: block;
+        background: #d1fae5;
+        color: #065f46;
+        border: 1px solid #6ee7b7;
+    }
+
+    .mic-status.error {
+        display: block;
+        background: #fee2e2;
+        color: #7f1d1d;
+        border: 1px solid #fca5a5;
+    }
+
+    .response-box, .reasoning-box {
+        background: rgba(255, 255, 255, 0.85);
+        padding: 1.8rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+    }
+
+    .rating-cards-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1.5rem;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    .rating-card {
+        background: linear-gradient(135deg, #f0f4f8 0%, #e8f4fd 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
+        text-align: center;
+        border-left: 5px solid #3f8efc;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+
+    .rating-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .rating-card h4 {
+        color: #1b4965;
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.7rem;
+        margin-top: 0;
+    }
+
+    .rating-value {
+        font-size: 2.5rem;
+        font-weight: bold;
+        color: #3f8efc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.3rem;
+    }
+
+    .rating-value .stars {
+        font-size: 1.5rem;
+        color: #ffc107;
+    }
+
+    .rating-count {
+        font-size: 0.85rem;
+        color: #666;
+        margin-top: 0.5rem;
+    }
+
+    .rating-count strong {
+        color: #1b4965;
+        font-weight: 600;
+    }
+
+    .response-box:hover, .reasoning-box:hover {
+        transform: translateY(-3px);
+    }
+
+    .response-box h5, .reasoning-box h6 {
+        color: #00cc99; /* Changed to teal for consistency with label */
+        font-weight: bold;
+        margin-bottom: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .response-box p, .reasoning-box p {
+        color: #333333; /* Changed to darker gray for better visibility */
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .chatbot-container {
+            margin: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .chatbot-header h3 {
+            font-size: 1.7rem;
+        }
+
+        .chatbot-form textarea {
+            min-height: 150px;
+            font-size: 1rem;
+        }
+
+        .chatbot-form button {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+        }
+
+        .response-box, .reasoning-box {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .history-section {
+            margin-top: 3rem;
+            padding: 2rem;
+            background: #f0f4f8;
+            border-radius: 10px;
+        }
+
+        .history-section h4 {
+            color: #1b4965;
+            margin-bottom: 1.5rem;
+            font-weight: bold;
+        }
+
+        .history-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #3f8efc;
+            border-radius: 5px;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-item:hover {
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transform: translateX(5px);
+        }
+
+        .history-item-content {
+            flex: 1;
+        }
+
+        .history-item p {
+            margin: 0.5rem 0;
+            color: #333;
+        }
+
+        .history-query {
+            font-weight: bold;
+            color: #1b4965;
+            margin-bottom: 0.5rem;
+        }
+
+        .history-time {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .history-reuse-btn {
+            background: linear-gradient(to right, #00cc99, #00b386);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            margin-left: 0.5rem;
+        }
+
+        .history-reuse-btn:hover {
+            background: linear-gradient(to right, #00b386, #009973);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .history-delete-btn {
+            background: linear-gradient(to right, #ff6b6b, #ee5a52);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            margin-left: 0.5rem;
+        }
+
+        .history-delete-btn:hover {
+            background: linear-gradient(to right, #ee5a52, #dd4d3e);
+            transform: scale(1.05);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .recommendations-section h4 {
+            color: #b8860b;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .health-conditions-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: linear-gradient(135deg, #e8f4fd 0%, #f0e8fd 100%);
+            border-radius: 10px;
+            border-left: 5px solid #3f8efc;
+        }
+
+        .health-conditions-section h4 {
+            color: #1b4965;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .conditions-info {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .conditions-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .condition-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: linear-gradient(to right, #00cc99, #00b386);
+            color: white;
+            padding: 0.7rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 8px rgba(0, 204, 153, 0.3);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        .condition-frequency {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-left: 0.3rem;
+        }
+
+        .conditions-note {
+            background: rgba(255, 255, 255, 0.7);
+            color: #1b4965;
+            padding: 0.8rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin: 0;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .recommendations-section {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: #fff8e1;
+            border-radius: 10px;
+        }
+
+        .recommendations-section h4 {
+            color: #b8860b;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+
+        .recommendation-item {
+            background: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #ffa500;
+            border-radius: 5px;
+        }
+
+        .recommendation-item.high {
+            border-left-color: #ff4444;
+        }
+
+        .recommendation-item.medium {
+            border-left-color: #ffa500;
+        }
+
+        .recommendation-item.low {
+            border-left-color: #90ee90;
+        }
+
+        .recommendation-title {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 0.3rem;
+        }
+
+        .recommendation-desc {
+            font-size: 0.95rem;
+            color: #555;
+        }
+    }
+</style>
+
+<div class="chatbot-container">
+    <div class="chatbot-header">
+        <h3><i class="fas fa-stethoscope"></i> Medical Chatbot</h3>
+    </div>
+
+    <!-- Rating Display Section -->
+    {% if medical_rating or overall_rating %}
+    <div class="rating-cards-container" style="margin-top: 1rem;">
+        <div class="rating-card">
+            <h4><i class="fas fa-star"></i> Medical Bot Rating</h4>
+            <div class="rating-value">
+                {{ medical_rating }}
+                <span class="stars">★</span>
+            </div>
+            <div class="rating-count">
+                Based on <strong>{{ medical_count }}</strong> feedback{{ medical_count|pluralize }}
+            </div>
+        </div>
+        
+        <div class="rating-card">
+            <h4><i class="fas fa-trophy"></i> Overall Rating</h4>
+            <div class="rating-value">
+                {{ overall_rating }}
+                <span class="stars">★</span>
+            </div>
+            <div class="rating-count">
+                Based on <strong>{{ overall_count }}</strong> total feedback{{ overall_count|pluralize }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="chatbot-body">
+        <form method="post" class="chatbot-form">
+            {% csrf_token %}
+            
+            <!-- Language Selector -->
+            <div class="language-selector">
+                <label for="language-select"><i class="fas fa-globe"></i> Language:</label>
+                <select id="language-select">
+                    <option value="en-US">English (US)</option>
+                    <option value="en-IN">English (India)</option>
+                    <option value="te-IN">Telugu (తెలుగు)</option>
+                    <option value="hi-IN">Hindi (हिन्दी)</option>
+                    <option value="ta-IN">Tamil (தமிழ்)</option>
+                    <option value="kn-IN">Kannada (ಕನ್ನಡ)</option>
+                    <option value="ml-IN">Malayalam (മലയാളം)</option>
+                    <option value="mr-IN">Marathi (मराठी)</option>
+                    <option value="pa-IN">Punjabi (ਪੰਜਾਬੀ)</option>
+                    <option value="gu-IN">Gujarati (ગુજરાતી)</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="fr-FR">French</option>
+                    <option value="de-DE">German</option>
+                    <option value="it-IT">Italian</option>
+                    <option value="pt-BR">Portuguese (Brazil)</option>
+                    <option value="ru-RU">Russian</option>
+                    <option value="ja-JP">Japanese</option>
+                    <option value="zh-CN">Chinese (Simplified)</option>
+                    <option value="zh-TW">Chinese (Traditional)</option>
+                    <option value="ko-KR">Korean</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="user_query">Ask a Health Question</label>
+                <textarea id="user_query" name="user_query" 
+                          placeholder="e.g., What should I eat if I have diabetes?"
+                          >{{ user_query }}</textarea>
+                <div id="mic-status" class="mic-status"></div>
+            </div>
+            <button type="submit"><i class="fas fa-paper-plane"></i> Ask</button>
+            <button type="button" class="microphone-btn" id="mic-btn" title="Click to speak your question">
+                <i class="fas fa-microphone"></i> Speak
+            </button>
+        </form>
+
+        {% if response_text %}
+        <div class="response-box">
+            <h5><i class="fas fa-check-circle"></i> Advice</h5>
+            <p>{{ response_text }}</p>
+        </div>
+
+        <div class="reasoning-box">
+            <h6><i class="fas fa-lightbulb"></i> Reasoning</h6>
+            <p>{{ reasoning }}</p>
+        </div>
+        {% endif %}
+
+        <!-- Detected Health Conditions -->
+        {% if health_conditions %}
+        <div class="health-conditions-section">
+            <h4><i class="fas fa-heart-pulse"></i> Your Detected Health Conditions</h4>
+            <p class="conditions-info">Based on your conversation, we've identified the following health conditions you've mentioned:</p>
+            <div class="conditions-list">
+                {% for condition, count in health_conditions.items %}
+                <span class="condition-badge">
+                    <i class="fas fa-check"></i> 
+                    {{ condition|title|add:" " }}
+                    <span class="condition-frequency">({{ count }} mention{{ count|pluralize }})</span>
+                </span>
+                {% endfor %}
+            </div>
+            <p class="conditions-note">
+                <i class="fas fa-info-circle"></i>
+                The chatbot will now provide personalized advice considering these conditions in your future queries.
+            </p>
+        </div>
+        {% endif %}
+
+        <!-- Personalized Recommendations -->
+        {% if recommendations %}
+        <div class="recommendations-section">
+            <h4><i class="fas fa-star"></i> Your Personalized Recommendations</h4>
+            {% for rec in recommendations %}
+            <div class="recommendation-item {{ rec.priority }}">
+                <div class="recommendation-title">{{ rec.title }}</div>
+                <div class="recommendation-desc">{{ rec.description }}</div>
+                <div class="history-time">{{ rec.recommendation_type|title }} - Priority: {{ rec.priority|title }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Chat History -->
+        {% if chat_history %}
+        <div class="history-section">
+            <h4><i class="fas fa-history"></i> Your Chat History</h4>
+            {% for chat in chat_history %}
+            <div class="history-item" id="history-{{ chat.id }}">
+                <div class="history-item-content">
+                    <div class="history-query">Q: {{ chat.query|truncatewords:15 }}</div>
+                    <p><small class="history-time">{{ chat.created_at|date:"M d, Y - H:i" }}</small></p>
+                </div>
+                <button type="button" class="history-reuse-btn" onclick="reuseQuery('{{ chat.query|escapejs }}')" aria-label="Reuse query" title="Reuse query">
+                    <i class="fas fa-undo-alt" aria-hidden="true"></i> Reuse
+                </button>
+                <button type="button" class="history-delete-btn" onclick="deleteHistory({{ chat.id }})" aria-label="Delete history" title="Delete history">
+                    <i class="fas fa-trash-alt" aria-hidden="true"></i> Delete
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function reuseQuery(query) {
+    // Populate the textarea with the selected query
+    const textarea = document.getElementById('user_query');
+    textarea.value = query;
+    
+    // Scroll to the textarea
+    textarea.focus();
+    textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    // Add a visual highlight effect
+    textarea.style.animation = 'none';
+    setTimeout(() => {
+        textarea.style.animation = 'highlightPulse 0.6s ease';
+    }, 10);
+}
+
+function deleteHistory(chatId) {
+    if (confirm('Are you sure you want to delete this chat history? This action cannot be undone.')) {
+        fetch(`/delete_medical_history/${chatId}/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Fade out and remove the item
+                const historyItem = document.getElementById(`history-${chatId}`);
+                historyItem.style.animation = 'fadeOut 0.5s ease forwards';
+                setTimeout(() => {
+                    historyItem.remove();
+                    // If no more history items, you might want to refresh or show a message
+                }, 500);
+            } else {
+                alert('Error deleting history. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error deleting history.');
+        });
+    }
+}
+
+// Add highlight and fade out animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes highlightPulse {
+        0% { background-color: rgba(229, 231, 235, 0.8); }
+        50% { background-color: #ffeb3b; }
+        100% { background-color: rgba(229, 231, 235, 0.8); }
+    }
+    
+    @keyframes fadeOut {
+        0% { opacity: 1; transform: translateX(0); }
+        100% { opacity: 0; transform: translateX(-20px); }
+    }
+`;
+document.head.appendChild(style);
+
+// ============== SPEECH RECOGNITION ==============
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+let isListening = false;
+
+const micBtn = document.getElementById('mic-btn');
+const micStatus = document.getElementById('mic-status');
+const textarea = document.getElementById('user_query');
+const languageSelect = document.getElementById('language-select');
+
+if (!recognition) {
+    micBtn.disabled = true;
+    micBtn.title = 'Speech Recognition not supported in your browser';
+    micBtn.style.opacity = '0.5';
+    micBtn.style.cursor = 'not-allowed';
+} else {
+    // Configure speech recognition
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    
+    // Set initial language
+    recognition.lang = languageSelect.value;
+    
+    // Update language when selector changes
+    languageSelect.addEventListener('change', (e) => {
+        if (!isListening) {
+            recognition.lang = e.target.value;
+        }
+    });
+
+    // Handle results
+    recognition.onstart = () => {
+        isListening = true;
+        micBtn.classList.add('listening');
+        micStatus.classList.remove('success', 'error');
+        micStatus.classList.add('listening');
+        const langName = languageSelect.options[languageSelect.selectedIndex].text;
+        micStatus.innerHTML = `<i class="fas fa-microphone"></i> Listening in ${langName}... Speak now!`;
+    };
+
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+
+        if (finalTranscript) {
+            textarea.value = (textarea.value + ' ' + finalTranscript).trim();
+        }
+    };
+
+    recognition.onend = () => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        
+        if (textarea.value.trim()) {
+            micStatus.classList.remove('error');
+            micStatus.classList.add('success');
+            micStatus.innerHTML = '<i class="fas fa-check-circle"></i> Speech captured! Ready to submit.';
+            setTimeout(() => {
+                micStatus.classList.remove('success');
+            }, 3000);
+        } else {
+            micStatus.classList.remove('success');
+            micStatus.classList.add('error');
+            micStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> No speech detected. Please try again.';
+            setTimeout(() => {
+                micStatus.classList.remove('error');
+            }, 3000);
+        }
+    };
+
+    recognition.onerror = (event) => {
+        isListening = false;
+        micBtn.classList.remove('listening');
+        micStatus.classList.remove('listening', 'success');
+        micStatus.classList.add('error');
+        
+        let errorMessage = 'Error: ';
+        switch(event.error) {
+            case 'no-speech':
+                errorMessage += 'No speech detected. Please try again.';
+                break;
+            case 'audio-capture':
+                errorMessage += 'No microphone found. Please check your device.';
+                break;
+            case 'network':
+                errorMessage += 'Network error. Please check your connection.';
+                break;
+            case 'permission-denied':
+                errorMessage += 'Microphone permission denied.';
+                break;
+            default:
+                errorMessage += event.error;
+        }
+        
+        micStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> ' + errorMessage;
+        setTimeout(() => {
+            micStatus.classList.remove('error');
+        }, 4000);
+    };
+
+    // Microphone button click handler
+    micBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        
+        if (isListening) {
+            recognition.stop();
+            micBtn.classList.remove('listening');
+        } else {
+            // Set language before starting
+            recognition.lang = languageSelect.value;
+            textarea.focus();
+            recognition.start();
+        }
+    });
+}
+</script>
+{% endblock %}

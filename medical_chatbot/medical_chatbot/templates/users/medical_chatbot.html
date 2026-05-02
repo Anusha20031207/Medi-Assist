@@ -1,0 +1,186 @@
+{% extends 'users/Userbase.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .chatbot-container {
+        max-width: 1200px;
+        margin: 2.5rem auto;
+        padding: 2.5rem;
+        backdrop-filter: blur(8px);
+        border-radius: 15px;
+        animation: fadeIn 0.8s ease-in-out;
+        transition: transform 0.3s ease;
+    }
+
+    .chatbot-container:hover {
+        transform: translateY(-5px);
+    }
+
+    .chatbot-header {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+    }
+
+    .chatbot-header h3 {
+        color: #f8fafc;
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+    }
+
+    .chatbot-body {
+        padding: 2rem;
+    }
+
+    .chatbot-form {
+        margin-bottom: 2.5rem;
+    }
+
+    .chatbot-form label {
+        display: block;
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: #00cc99; /* Changed to a vibrant teal for contrast */
+        margin-bottom: 0.7rem;
+    }
+
+    .chatbot-form textarea {
+        width: 100%;
+        min-height: 200px;
+        padding: 1.2rem;
+        border: none;
+        border-radius: 12px;
+        background: rgba(229, 231, 235, 0.8);
+        font-size: 1.1rem;
+        color: #333333; /* Changed to a darker gray for readability */
+        resize: vertical;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .chatbot-form textarea::placeholder {
+        color: #666666; /* Changed placeholder to a medium gray for visibility */
+    }
+
+    .chatbot-form textarea:focus {
+        outline: none;
+        border: 2px solid #3f8efc;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .chatbot-form button {
+        display: inline-block;
+        padding: 1rem 2.5rem;
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        font-weight: bold;
+        font-size: 1.1rem;
+        border: none;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .chatbot-form button:hover {
+        background: linear-gradient(to right, #16394e, #2b6cbf);
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .response-box, .reasoning-box {
+        background: rgba(255, 255, 255, 0.85);
+        padding: 1.8rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        transition: transform 0.3s ease;
+    }
+
+    .response-box:hover, .reasoning-box:hover {
+        transform: translateY(-3px);
+    }
+
+    .response-box h5, .reasoning-box h6 {
+        color: #00cc99; /* Changed to teal for consistency with label */
+        font-weight: bold;
+        margin-bottom: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .response-box p, .reasoning-box p {
+        color: #333333; /* Changed to darker gray for better visibility */
+        font-size: 1.1rem;
+        line-height: 1.6;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .chatbot-container {
+            margin: 1.5rem;
+            padding: 1.5rem;
+        }
+
+        .chatbot-header h3 {
+            font-size: 1.7rem;
+        }
+
+        .chatbot-form textarea {
+            min-height: 150px;
+            font-size: 1rem;
+        }
+
+        .chatbot-form button {
+            width: 100%;
+            padding: 0.9rem;
+            font-size: 1rem;
+        }
+
+        .response-box, .reasoning-box {
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+    }
+</style>
+
+<div class="chatbot-container">
+    <div class="chatbot-header">
+        <h3><i class="fas fa-stethoscope"></i> Medical Chatbot</h3>
+    </div>
+    <div class="chatbot-body">
+        <form method="post" class="chatbot-form">
+            {% csrf_token %}
+            <div>
+                <label for="user_query">Ask a Health Question</label>
+                <textarea id="user_query" name="user_query" 
+                          placeholder="e.g., What should I eat if I have diabetes?"
+                          >{{ user_query }}</textarea>
+            </div>
+            <button type="submit"><i class="fas fa-paper-plane"></i> Ask</button>
+        </form>
+
+        {% if response_text %}
+        <div class="response-box">
+            <h5><i class="fas fa-check-circle"></i> Advice</h5>
+            <p>{{ response_text }}</p>
+        </div>
+
+        <div class="reasoning-box">
+            <h6><i class="fas fa-lightbulb"></i> Reasoning</h6>
+            <p>{{ reasoning }}</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

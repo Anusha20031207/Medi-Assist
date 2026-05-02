@@ -1,0 +1,386 @@
+{% extends 'users/Userbase.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .feedback-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+        backdrop-filter: blur(8px);
+        border-radius: 15px;
+        animation: fadeIn 0.8s ease-in-out;
+    }
+
+    .feedback-header {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+        color: #f8fafc;
+    }
+
+    .feedback-header h3 {
+        font-size: 2rem;
+        font-weight: bold;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+    }
+
+    .feedback-form-container {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        margin-bottom: 2rem;
+    }
+
+    .feedback-form label {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.7rem;
+        margin-top: 1rem;
+    }
+
+    .feedback-form label:first-of-type {
+        margin-top: 0;
+    }
+
+    .feedback-form input[type="text"],
+    .feedback-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        background: rgba(229, 231, 235, 0.8);
+        font-size: 1rem;
+        color: #1e293b;
+        font-family: 'Segoe UI', sans-serif;
+        transition: border 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feedback-form textarea {
+        min-height: 150px;
+        resize: vertical;
+    }
+
+    .feedback-form input[type="text"]:focus,
+    .feedback-form textarea:focus {
+        outline: none;
+        border: 2px solid #3f8efc;
+        box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+
+    .rating-section {
+        margin: 1.5rem 0;
+    }
+
+    .rating-options {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 0.7rem;
+    }
+
+    .rating-option {
+        flex: 1;
+        min-width: 100px;
+    }
+
+    .rating-option input[type="radio"] {
+        display: none;
+    }
+
+    .rating-option label {
+        display: block;
+        padding: 0.75rem;
+        text-align: center;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        margin: 0;
+    }
+
+    .rating-option input[type="radio"]:checked + label {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        border-color: #3f8efc;
+        font-weight: bold;
+    }
+
+    .rating-option label:hover {
+        border-color: #3f8efc;
+        transform: translateY(-2px);
+    }
+
+    .feedback-form button {
+        display: inline-block;
+        padding: 0.9rem 2rem;
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        font-weight: bold;
+        font-size: 1rem;
+        border: none;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        margin-top: 1rem;
+    }
+
+    .feedback-form button:hover {
+        background: linear-gradient(to right, #16394e, #2b6cbf);
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .previous-feedbacks {
+        background: rgba(255, 255, 255, 0.95);
+        padding: 2rem;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    .previous-feedbacks h4 {
+        color: #1e293b;
+        font-size: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .feedback-item {
+        background: #f9fafb;
+        padding: 1.5rem;
+        border-radius: 10px;
+        margin-bottom: 1.5rem;
+        border-left: 4px solid #3f8efc;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feedback-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .feedback-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .feedback-item-title {
+        font-size: 1.1rem;
+        font-weight: bold;
+        color: #1e293b;
+        margin: 0;
+    }
+
+    .feedback-item-date {
+        font-size: 0.85rem;
+        color: #64748b;
+    }
+
+    .feedback-item-rating {
+        background: linear-gradient(to right, #1b4965, #3f8efc);
+        color: #f8fafc;
+        padding: 0.3rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .feedback-item-message {
+        color: #4b5563;
+        line-height: 1.6;
+        margin: 0;
+    }
+
+    .no-feedbacks {
+        text-align: center;
+        color: #64748b;
+        padding: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .message-box {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .message-box.success {
+        background: #dcfce7;
+        color: #166534;
+        border-left: 4px solid #16a34a;
+    }
+
+    .message-box.error {
+        background: #fee2e2;
+        color: #991b1b;
+        border-left: 4px solid #dc2626;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+        .feedback-container {
+            margin: 1rem;
+            padding: 1rem;
+        }
+
+        .feedback-header h3 {
+            font-size: 1.5rem;
+        }
+
+        .feedback-form-container,
+        .previous-feedbacks {
+            padding: 1.5rem;
+        }
+
+        .rating-options {
+            gap: 0.5rem;
+        }
+
+        .rating-option {
+            min-width: 80px;
+        }
+
+        .rating-option label {
+            padding: 0.5rem;
+            font-size: 0.85rem;
+        }
+    }
+</style>
+
+<div class="feedback-container">
+    <div class="feedback-header">
+        <h3><i class="fas fa-comment"></i> Send Us Your Feedback</h3>
+    </div>
+
+    <!-- Rating Summary Section -->
+    {% if medical_rating or nutrition_rating or overall_rating %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.2rem; margin: 1.5rem 0; padding: 0;">
+        {% if medical_rating %}
+        <div style="background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%); padding: 1.2rem; border-radius: 10px; text-align: center; border-left: 4px solid #1976d2;">
+            <p style="color: #0d47a1; font-weight: 600; font-size: 0.9rem; margin: 0 0 0.5rem 0;">Medical Bot</p>
+            <div style="font-size: 2rem; font-weight: bold; color: #1565c0;">{{ medical_rating }}★</div>
+            <p style="color: #555; font-size: 0.8rem; margin: 0.3rem 0 0 0;">{{ medical_count }} ratings</p>
+        </div>
+        {% endif %}
+        
+        {% if nutrition_rating %}
+        <div style="background: linear-gradient(135deg, #f1f8e9 0%, #dcedc8 100%); padding: 1.2rem; border-radius: 10px; text-align: center; border-left: 4px solid #558b2f;">
+            <p style="color: #33691e; font-weight: 600; font-size: 0.9rem; margin: 0 0 0.5rem 0;">Nutrition Bot</p>
+            <div style="font-size: 2rem; font-weight: bold; color: #689f38;">{{ nutrition_rating }}★</div>
+            <p style="color: #555; font-size: 0.8rem; margin: 0.3rem 0 0 0;">{{ nutrition_count }} ratings</p>
+        </div>
+        {% endif %}
+        
+        {% if overall_rating %}
+        <div style="background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%); padding: 1.2rem; border-radius: 10px; text-align: center; border-left: 4px solid #f57c00;">
+            <p style="color: #e65100; font-weight: 600; font-size: 0.9rem; margin: 0 0 0.5rem 0;">Overall Rating</p>
+            <div style="font-size: 2rem; font-weight: bold; color: #ef6c00;">{{ overall_rating }}★</div>
+            <p style="color: #555; font-size: 0.8rem; margin: 0.3rem 0 0 0;">{{ overall_count }} total ratings</p>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="message-box {% if message.tags %}{{ message.tags }}{% endif %}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="feedback-form-container">
+        <form method="post" class="feedback-form">
+            {% csrf_token %}
+            
+            <label for="id_feedback_type">What is your feedback about?</label>
+            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <label style="display: flex; align-items: center; margin: 0; font-weight: 400; cursor: pointer;">
+                    <input type="radio" name="feedback_type" value="medical" required style="margin-right: 0.5rem;"> Medical Bot
+                </label>
+                <label style="display: flex; align-items: center; margin: 0; font-weight: 400; cursor: pointer;">
+                    <input type="radio" name="feedback_type" value="nutrition" required style="margin-right: 0.5rem;"> Nutrition Bot
+                </label>
+                <label style="display: flex; align-items: center; margin: 0; font-weight: 400; cursor: pointer;">
+                    <input type="radio" name="feedback_type" value="general" required style="margin-right: 0.5rem;"> General Feedback
+                </label>
+            </div>
+            
+            <label for="id_subject">Feedback Subject</label>
+            <input type="text" name="subject" id="id_subject" placeholder="e.g., Great Experience with Medical Chatbot" maxlength="200" required>
+
+            <label for="id_message">Your Feedback</label>
+            <textarea name="message" id="id_message" placeholder="Please share your detailed feedback..." maxlength="1000" required></textarea>
+
+            <div class="rating-section">
+                <label>Rate Your Experience</label>
+                <div class="rating-options">
+                    <div class="rating-option">
+                        <input type="radio" name="rating" id="rating1" value="1" required>
+                        <label for="rating1">1 - Poor</label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" name="rating" id="rating2" value="2">
+                        <label for="rating2">2 - Fair</label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" name="rating" id="rating3" value="3">
+                        <label for="rating3">3 - Good</label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" name="rating" id="rating4" value="4">
+                        <label for="rating4">4 - Very Good</label>
+                    </div>
+                    <div class="rating-option">
+                        <input type="radio" name="rating" id="rating5" value="5">
+                        <label for="rating5">5 - Excellent</label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit"><i class="fas fa-paper-plane"></i> Submit Feedback</button>
+        </form>
+    </div>
+
+    {% if user_feedbacks %}
+    <div class="previous-feedbacks">
+        <h4><i class="fas fa-history"></i> Your Feedback History</h4>
+        {% for feedback in user_feedbacks %}
+        <div class="feedback-item">
+            <div class="feedback-item-header">
+                <div>
+                    <h5 class="feedback-item-title">{{ feedback.subject }}</h5>
+                    <span class="feedback-item-date">{{ feedback.created_at|date:"M d, Y H:i" }}</span>
+                </div>
+                <span class="feedback-item-rating">⭐ {{ feedback.rating }}/5</span>
+            </div>
+            <p class="feedback-item-message">{{ feedback.message }}</p>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="previous-feedbacks">
+        <p class="no-feedbacks"><i class="fas fa-inbox"></i> No feedback submitted yet. Share your experience with us!</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
